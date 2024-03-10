@@ -1,0 +1,65 @@
+
+* Reglas:
+
+| J1     | J2     | resultado |
+| Piedra | Piedra | Empate    |
+| Piedra | Papel  | J1 Pierde |
+| Piedra | Tijera | J1 Gana   |
+|--------+--------+-----------|
+| Papel  | Papel  | Empate    |
+| Papel  | Tijera | J1 Pierde |
+| Papel  | Piedra | J1 Gana   |
+|--------+--------+-----------|
+| Tijera | Tijera | Empate    |
+| Tijera | Piedra | J1 Pierde |
+| Tijera | Papel  | J1 Gana   |
+
+* usando if
+
+#+begin_src js :results output
+const j1 = "Piedra";
+const j2 = "Papel";
+
+function resultado(j1, j2) {
+ if(j1 ===j2 )                          return  "Empate";
+ if(j1 === "Piedra" && j2 === "Papel")  return  "J1 Pierde";
+ if(j1 === "Piedra" && j2 === "Tijera") return  "J1 Gana";
+ if(j1 === "Papel"  && j2 === "Tijera") return  "J1 Pierde";
+ if(j1 === "Papel"  && j2 === "Piedra") return  "J1 Gana"; 
+ if(j1 === "Tijera" && j2 === "Piedra") return  "J1 Pierde";
+ if(j1 === "Tijera" && j2 === "Papel")  return  "J1 Gana";   
+}
+
+console.log('-- ',resultado(j1,j2));
+#+end_src
+
+
+* usando un objeto 
+#+begin_src js :results output 
+
+function resultado(j1,j2) {
+  
+  if(j1 ===j2 ) return "Empate";
+
+  resultados = {
+	"Piedra": {
+		"Papel":  "J1 Pierde",
+		"Tijera": "J1 Gana"
+	},
+	"Papel": {
+		"Piedra": "J1 Gana",
+		"Tijera": "J1 Pierde"
+	},
+	"Tijera": {
+		"Piedra": "J1 Pierde",
+		"Papel": "J1 Gana"
+	}
+ }
+
+  return resultados[j1][j2]
+}
+
+console.log(resultado("Piedra", "Tijera"));
+
+#+end_src
+
