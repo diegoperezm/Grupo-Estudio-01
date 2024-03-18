@@ -1,0 +1,916 @@
+* Sesión 16 Marzo 2024 
+#+title: autómatas (calculadora en JS)
+#+author: Diego Pérez M. 
+
+ - Ejercicio: Implementar una calculadora usando JavaScript
+ - Tema: autómatas/máquinas de estado finito  
+
+** Descripción
+
+Apuntes de la presentación: sesión 16 de Marzo 2024, grupo de estudio.
+
+** Introducción
+
+Tradicionalmente implementar una calculadora ha sido considerado como un proyecto de mediana o baja complejidad. Lo cual resulta curioso, en la medida que cada calculadora que he podido encontrar en internet, tiene uno o varios errores.  
+
+Estos errores tiene su origen no solo en la complejidad del proyecto, sino también en la forma en que fueron desarrollados. Veamos un ejemplo: 
+
+** Ejemplo calculadora
+
+*** https://javascript-calculator.freecodecamp.rocks/
+
+*** Repo:
+
+https://github.com/freeCodeCamp/demo-projects/blob/main/apps/javascript-calculator/client/index.jsx 
+
+*** Código
+
+#+begin_src js
+/* global React, ReactDOM */
+/* eslint-disable react/prop-types, react/no-multi-comp,
+ no-eval, no-nested-ternary */
+
+// eslint-disable-next-line no-unused-vars
+const projectName = 'javascript-calculator';
+
+// To see a more advanced version of this app with features such as toggle sign
+// and Clear Entry buttons, see this pen
+// https://codepen.io/no_stack_dub_sack/full/jrxpKP/
+
+// coded by @no-stack-dub-sack (github) / @no_stack_sub_sack (codepen)
+
+// VARS:
+const isOperator = /[x/+-]/,
+  endsWithOperator = /[x+-/]$/,
+  endsWithNegativeSign = /\d[x/+-]{1}-$/,
+  clearStyle = { background: '#ac3939' },
+  operatorStyle = { background: '#666666' },
+  equalsStyle = {
+    background: '#004466',
+    position: 'absolute',
+    height: 130,
+    bottom: 5
+  };
+
+// COMPONENTS:
+class Calculator extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      currentVal: '0',
+      prevVal: '0',
+      formula: '',
+      currentSign: 'pos',
+      lastClicked: ''
+    };
+    this.maxDigitWarning = this.maxDigitWarning.bind(this);
+    this.handleOperators = this.handleOperators.bind(this);
+    this.handleEvaluate = this.handleEvaluate.bind(this);
+    this.initialize = this.initialize.bind(this);
+    this.handleDecimal = this.handleDecimal.bind(this);
+    this.handleNumbers = this.handleNumbers.bind(this);
+  }
+
+  maxDigitWarning() {
+    this.setState({
+      currentVal: 'Digit Limit Met',
+      prevVal: this.state.currentVal
+    });
+    setTimeout(() => this.setState({ currentVal: this.state.prevVal }), 1000);
+  }
+
+  handleEvaluate() {
+    if (!this.state.currentVal.includes('Limit')) {
+      let expression = this.state.formula;
+      while (endsWithOperator.test(expression)) {
+        expression = expression.slice(0, -1);
+      }
+      expression = expression
+        .replace(/x/g, '*')
+        .replace(/-/g, '-')
+        .replace('--', '-');
+      let answer = Math.round(1000000000000 * eval(expression)) / 1000000000000;
+      this.setState({
+        currentVal: answer.toString(),
+        formula:
+          expression
+            .replace(/\*/g, '⋅')
+            .replace(/-/g, '-')
+            .replace(/(x|\/|\+)-/, '$1-')
+            .replace(/^-/, '-') +
+          '=' +
+          answer,
+        prevVal: answer,
+        evaluated: true
+      });
+    }
+  }
+
+  handleOperators(e) {
+    if (!this.state.currentVal.includes('Limit')) {
+      const value = e.target.value;
+      const { formula, prevVal, evaluated } = this.state;
+      this.setState({ currentVal: value, evaluated: false });
+      if (evaluated) {
+        this.setState({ formula: prevVal + value });
+      } else if (!endsWithOperator.test(formula)) {
+        this.setState({
+          prevVal: formula,
+          formula: formula + value
+        });
+      } else if (!endsWithNegativeSign.test(formula)) {
+        this.setState({
+          formula:
+            (endsWithNegativeSign.test(formula + value) ? formula : prevVal) +
+            value
+        });
+      } else if (value !== '-') {
+        this.setState({
+          formula: prevVal + value
+        });
+      }
+    }
+  }
+
+  handleNumbers(e) {
+    if (!this.state.currentVal.includes('Limit')) {
+      const { currentVal, formula, evaluated } = this.state;
+      const value = e.target.value;
+      this.setState({ evaluated: false });
+      if (currentVal.length > 21) {
+        this.maxDigitWarning();
+      } else if (evaluated) {
+        this.setState({
+          currentVal: value,
+          formula: value !== '0' ? value : ''
+        });
+      } else {
+        this.setState({
+          currentVal:
+            currentVal === '0' || isOperator.test(currentVal)
+              ? value
+              : currentVal + value,
+          formula:
+            currentVal === '0' && value === '0'
+              ? formula === ''
+                ? value
+                : formula
+              : /([^.0-9]0|^0)$/.test(formula)
+              ? formula.slice(0, -1) + value
+              : formula + value
+        });
+      }
+    }
+  }
+
+  handleDecimal() {
+    if (this.state.evaluated === true) {
+      this.setState({
+        currentVal: '0.',
+        formula: '0.',
+        evaluated: false
+      });
+    } else if (
+      !this.state.currentVal.includes('.') &&
+      !this.state.currentVal.includes('Limit')
+    ) {
+      this.setState({ evaluated: false });
+      if (this.state.currentVal.length > 21) {
+        this.maxDigitWarning();
+      } else if (
+        endsWithOperator.test(this.state.formula) ||
+        (this.state.currentVal === '0' && this.state.formula === '')
+      ) {
+        this.setState({
+          currentVal: '0.',
+          formula: this.state.formula + '0.'
+        });
+      } else {
+        this.setState({
+          currentVal: this.state.formula.match(/(-?\d+\.?\d*)$/)[0] + '.',
+          formula: this.state.formula + '.'
+        });
+      }
+    }
+  }
+
+  initialize() {
+    this.setState({
+      currentVal: '0',
+      prevVal: '0',
+      formula: '',
+      currentSign: 'pos',
+      lastClicked: '',
+      evaluated: false
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <div className='calculator'>
+          <Formula formula={this.state.formula.replace(/x/g, '⋅')} />
+          <Output currentValue={this.state.currentVal} />
+          <Buttons
+            decimal={this.handleDecimal}
+            evaluate={this.handleEvaluate}
+            initialize={this.initialize}
+            numbers={this.handleNumbers}
+            operators={this.handleOperators}
+          />
+        </div>
+        <div className='author'>
+          {' '}
+          Designed and Coded By <br />
+          <a
+            href='https://www.freecodecamp.org/no-stack-dub-sack'
+            target='_blank'
+            rel='noreferrer'
+          >
+            Peter Weinberg
+          </a>
+        </div>
+      </div>
+    );
+  }
+}
+
+class Buttons extends React.Component {
+  render() {
+    return (
+      <div>
+        <button
+          className='jumbo'
+          id='clear'
+          onClick={this.props.initialize}
+          style={clearStyle}
+          value='AC'
+        >
+          AC
+        </button>
+        <button
+          id='divide'
+          onClick={this.props.operators}
+          style={operatorStyle}
+          value='/'
+        >
+          /
+        </button>
+        <button
+          id='multiply'
+          onClick={this.props.operators}
+          style={operatorStyle}
+          value='x'
+        >
+          x
+        </button>
+        <button id='seven' onClick={this.props.numbers} value='7'>
+          7
+        </button>
+        <button id='eight' onClick={this.props.numbers} value='8'>
+          8
+        </button>
+        <button id='nine' onClick={this.props.numbers} value='9'>
+          9
+        </button>
+        <button
+          id='subtract'
+          onClick={this.props.operators}
+          style={operatorStyle}
+          value='-'
+        >
+          -
+        </button>
+        <button id='four' onClick={this.props.numbers} value='4'>
+          4
+        </button>
+        <button id='five' onClick={this.props.numbers} value='5'>
+          5
+        </button>
+        <button id='six' onClick={this.props.numbers} value='6'>
+          6
+        </button>
+        <button
+          id='add'
+          onClick={this.props.operators}
+          style={operatorStyle}
+          value='+'
+        >
+          +
+        </button>
+        <button id='one' onClick={this.props.numbers} value='1'>
+          1
+        </button>
+        <button id='two' onClick={this.props.numbers} value='2'>
+          2
+        </button>
+        <button id='three' onClick={this.props.numbers} value='3'>
+          3
+        </button>
+        <button
+          className='jumbo'
+          id='zero'
+          onClick={this.props.numbers}
+          value='0'
+        >
+          0
+        </button>
+        <button id='decimal' onClick={this.props.decimal} value='.'>
+          .
+        </button>
+        <button
+          id='equals'
+          onClick={this.props.evaluate}
+          style={equalsStyle}
+          value='='
+        >
+          =
+        </button>
+      </div>
+    );
+  }
+}
+
+class Output extends React.Component {
+  render() {
+    return (
+      <div className='outputScreen' id='display'>
+        {this.props.currentValue}
+      </div>
+    );
+  }
+}
+
+class Formula extends React.Component {
+  render() {
+    return <div className='formulaScreen'>{this.props.formula}</div>;
+  }
+}
+
+ReactDOM.render(<Calculator />, document.getElementById('app'));
+#+end_src
+  
+*** Análisis
+**** Eventos (5):
+
+ - ~decimal    => handleDecimal~
+ - ~evaluate   => handleEvaluate~
+ - ~initialize => initialize~
+ - ~numbers    => handleNumbers~
+ - ~operators  => handleOperators~
+ 
+**** Funciones (6):
+
+ -  ~maxDigitWarning~ 
+
+#+begin_src js
+maxDigitWarning() {
+    this.setState({
+      currentVal: 'Digit Limit Met',
+      prevVal: this.state.currentVal
+    });
+    setTimeout(() => this.setState({ currentVal: this.state.prevVal }), 1000);
+  }
+#+end_src
+
+
+ -  ~handleEvaluate~
+
+     - if: !this.state.currentVal.includes('Limit') 
+
+#+begin_src js 
+handleEvaluate() {
+    if (!this.state.currentVal.includes('Limit')) {
+      let expression = this.state.formula;
+      while (endsWithOperator.test(expression)) {
+        expression = expression.slice(0, -1);
+      }
+      expression = expression
+        .replace(/x/g, '*')
+        .replace(/-/g, '-')
+        .replace('--', '-');
+      let answer = Math.round(1000000000000 * eval(expression)) / 1000000000000;
+      this.setState({
+        currentVal: answer.toString(),
+        formula:
+          expression
+            .replace(/\*/g, '⋅')
+            .replace(/-/g, '-')
+            .replace(/(x|\/|\+)-/, '$1-')
+            .replace(/^-/, '-') +
+          '=' +
+          answer,
+        prevVal: answer,
+        evaluated: true
+      });
+    }
+  }
+#+end_src
+
+
+ -  ~handleOperators~
+
+     - if      !this.state.currentVal.includes('Limit')
+
+     - if       evaluated
+
+     - else if !endsWithNegativeSign.test(formula) 
+
+     * else if value !== '-'
+
+#+begin_src js
+  handleOperators(e) {
+    if (!this.state.currentVal.includes('Limit')) {
+      const value = e.target.value;
+      const { formula, prevVal, evaluated } = this.state;
+      this.setState({ currentVal: value, evaluated: false });
+      if (evaluated) {
+        this.setState({ formula: prevVal + value });
+      } else if (!endsWithOperator.test(formula)) {
+        this.setState({
+          prevVal: formula,
+          formula: formula + value
+        });
+      } else if (!endsWithNegativeSign.test(formula)) {
+        this.setState({
+          formula:
+            (endsWithNegativeSign.test(formula + value) ? formula : prevVal) +
+            value
+        });
+      } else if (value !== '-') {
+        this.setState({
+          formula: prevVal + value
+        });
+      }
+    }
+  }
+#+end_src
+
+
+ -  ~handleNumbers~
+
+     - if       !this.state.currentVal.includes('Limit')
+
+     * if       currentVal.length > 21
+
+     * else if  evaluated 
+     
+     - else 
+
+#+begin_src js
+  handleNumbers(e) {
+    if (!this.state.currentVal.includes('Limit')) {
+      const { currentVal, formula, evaluated } = this.state;
+      const value = e.target.value;
+      this.setState({ evaluated: false });
+      if (currentVal.length > 21) {
+        this.maxDigitWarning();
+      } else if (evaluated) {
+        this.setState({
+          currentVal: value,
+          formula: value !== '0' ? value : ''
+        });
+      } else {
+        this.setState({
+          currentVal:
+            currentVal === '0' || isOperator.test(currentVal)
+              ? value
+              : currentVal + value,
+          formula:
+            currentVal === '0' && value === '0'
+              ? formula === ''
+                ? value
+                : formula
+              : /([^.0-9]0|^0)$/.test(formula)
+              ? formula.slice(0, -1) + value
+              : formula + value
+        });
+      }
+    }
+  }
+
+#+end_src
+
+
+
+ - ~handleDecimal~
+
+     - if      this.state.evaluated === true
+
+     - else if !this.state.currentVal.includes('.') &&
+               !this.state.currentVal.includes('Limit')
+
+     - if      this.state.currentVal.length > 21
+
+     - else if endsWithOperator.test(this.state.formula) ||
+               (this.state.currentVal === '0' && this.state.formula === '')
+
+     - else 
+
+#+begin_src js
+  handleDecimal() {
+    if (this.state.evaluated === true) {
+      this.setState({
+        currentVal: '0.',
+        formula: '0.',
+        evaluated: false
+      });
+    } else if (
+      !this.state.currentVal.includes('.') &&
+      !this.state.currentVal.includes('Limit')
+    ) {
+      this.setState({ evaluated: false });
+      if (this.state.currentVal.length > 21) {
+        this.maxDigitWarning();
+      } else if (
+        endsWithOperator.test(this.state.formula) ||
+        (this.state.currentVal === '0' && this.state.formula === '')
+      ) {
+        this.setState({
+          currentVal: '0.',
+          formula: this.state.formula + '0.'
+        });
+      } else {
+        this.setState({
+          currentVal: this.state.formula.match(/(-?\d+\.?\d*)$/)[0] + '.',
+          formula: this.state.formula + '.'
+        });
+      }
+    }
+  }
+#+end_src
+
+ - ~initialize~
+
+#+begin_src js 
+  initialize() {
+    this.setState({
+      currentVal: '0',
+      prevVal: '0',
+      formula: '',
+      currentSign: 'pos',
+      lastClicked: '',
+      evaluated: false
+    });
+  }
+#+end_src  
+
+
+#+begin_src js
+  constructor(props) 
+    super(props);
+    this.state = {
+      currentVal: '0',
+      prevVal: '0',
+      formula: '',
+      currentSign: 'pos',
+      lastClicked: ''
+   // y evaluated???? 
+#+end_src
+
+*** Pruebas 
+
+1. NaN:
+
+#+begin_src 
+-=
+#+end_src
+
+
+2. "Uncaught SyntaxError: Invalid regular expression: missing /"
+
+#+begin_src 
+/1=   
+#+end_src
+
+** Construcción de la interfaz de usuario con Statecharts, Ian Horrocks (1999) 
+
+Constructing the User Interface with Statecharts, Ian Horrocks (1999) 
+
+
+#+begin_quote
+El paradigma evento-acción
+
+Ya hemos visto que el software de interfaz de usuario se rige por eventos. Un usuario envía un *evento* a un objeto y *se ejecuta una secuencia de acciones en respuesta a ese evento*. El software se detiene y espera a que se produzca el siguiente evento. En resumen, *un evento suministrado por un usuario determina la secuencia de acciones que ejecuta el software*. Este es el paradigma *evento-acción* y la mayoría de los desarrolladores piensan en términos de él cuando construyen software de interfaz de usuario.
+
+La mayoría de los desarrolladores de interfaces de usuario piensan en términos del paradigma evento-acción. Como consecuencia de ello, la mayor parte del software de interfaz de usuario se construye de *abajo arriba*.
+
+Es decir, los manejadores de eventos (event handlers) individuales no se escriben en su totalidad de una sola vez, como se haría con las subrutinas convencionales.
+
+En su lugar, el código de los manejadores de eventos (event handlers) se construye gradualmente hasta conseguir un grupo coordinado de manejadores de eventos (event handlers).
+
+Normalmente, cada manejador de eventos (event handler) comienza con una secuencia básica de acciones que se ejecutarán en respuesta a un evento. *Y como un elemento puede responder a un evento de distintas maneras, según el contexto en que se utilice, se añaden sentencias condicionales para determinar el contexto en que se ha producido el evento y, por tanto, qué acciones ejecutar*.
+
+*Para determinar el contexto en el que se ha producido un evento, un manejador de eventos (event handler) debe hacer uso de la información compartida entre los objetos de la interfaz de usuario*. Esta información está disponible para cualquier gestor de eventos.
+
+La información puede no ser necesariamente una variable global explícita; puede ser, por ejemplo, el valor contenido en un objeto de la interfaz de usuario o cualquier otro atributo de un objeto.
+
+Traducción realizada con la versión gratuita del traductor DeepL.com
+#+end_quote
+
+
+Original: 
+
+
+#+begin_quote
+The event-action paradigm
+
+We have already seen that user interface software is event driven. A user supplies an event to an object and a sequence of actions is executed in response to that event. The software then stops and waits for the next event to be supplied. In short, an event supplied by a user determines the sequence of actions that is executed by the software. This is the event-action paradigm and most developers think in terms of it when they are constructing user interface software.
+
+The majority of user interface developers think in terms of the event-action paradigm. As a consequence of this, most user interface software is constructed in a bottom-up fashion. That is, individual event handlers are not written in their entirety at one time in the way that conventional subroutines would be written. 
+
+Instead, the code in event handlers are usually built up gradually until a co-ordinated group of event handlers is achieved.
+
+Typically, each event handler starts with a basic sequence of actions that will be executed in response to an event. And because an item may respond to an event in different ways, depending on the context in which it is used, conditional statements are added to determine the context in which the event has occurred and therefore which actions to execute.
+
+In order to determine the context in which an event has occurred, an event handler must make use of information shared between user interface objects. Such information is available for any event handler to use.
+
+The information may not necessarily be an explicit global variable; it may, for example, be the value contained in a user interface object or any other attribute of an object.
+#+end_quote
+
+** Autómata finito/máquina de estado finito 
+
+https://es.wikipedia.org/wiki/Autómata_finito
+
+#+begin_quote
+
+Un autómata finito (AF) o máquina de estado finito es un modelo computacional que realiza cómputos en forma automática sobre una entrada para producir una salida.
+
+Este modelo está conformado por un alfabeto, un *conjunto de estados finito*, una *función de transición*, un *estado inicial* y un *conjunto de estados finales*. Su funcionamiento se basa en una función de transición, que recibe a partir de un estado inicial una cadena de caracteres pertenecientes al alfabeto (la entrada), y que va leyendo dicha cadena a medida que el autómata se desplaza de un estado a otro, para finalmente detenerse en un estado final o de aceptación, que representa la salida.
+
+#+end_quote
+
+** Ejemplo autómata (JavaScript)
+
+En general, existen varias formas de implementar un autómata en JavaScript:
+
+
+#+begin_src js :results output :exports both
+const estados = {
+// estado: verde
+  verde: { 
+// evento: cambio : siguiente estado: amarillo
+    'cambio': 'amarillo' 
+  },
+  amarillo: { 
+    'cambio': 'rojo' 
+  },
+  rojo: { 
+    'cambio': 'verde' 
+   },
+};
+
+function transicion(estado,evento) {
+ switch(estado) {
+  case "verde":
+  console.log(estados[estado][evento]);
+  break;
+  case "amarillo":
+  console.log(estados[estado][evento]);
+  break;
+  case "rojo":
+  console.log(estados[estado][evento]);
+  break;
+  default:
+  console.log("error estado o evento inválido");
+ }
+}
+
+transicion("verde",    "cambio");
+transicion("amarillo", "cambio");
+transicion("rojo",     "cambio");
+transicion("azul",     "cambio");    // estado inválido 
+transicion("azul",     "asdfasdf"); // estado inválido, evento inválido
+
+
+#+end_src
+
+#+RESULTS:
+: amarillo
+: rojo
+: verde
+: error estado o evento inválido
+: error estado o evento inválido
+
+** Ejemplo calculadora usando un autómata 
+
+En este ejemplo la calculadora no permite que el primer símbolo ingresado sea un operador(es decir, solo acepta digitos: 0-9).
+Éste  autómata es un poco más sofisticado que el anterior, los eventos tienen un "tipo", lo que permite reducir la cantidad de pares estado-evento (en el caso de los digitos pasamos de tener 10 pares de estado-evento a 1 par).
+
+#+begin_src js :results output :exports both
+const evento = {
+  cero:        {tipo: "numero",   cargaUtil: 0  },
+  uno:         {tipo: "numero",   cargaUtil: 1  },
+  dos:         {tipo: "numero",   cargaUtil: 2  },
+  tres:        {tipo: "numero",   cargaUtil: 3  },
+  cuatro:      {tipo: "numero",   cargaUtil: 4  },
+  cinco:       {tipo: "numero",   cargaUtil: 5  },
+  seis:        {tipo: "numero",   cargaUtil: 6  },
+  siete:       {tipo: "numero",   cargaUtil: 7  },
+  ocho:        {tipo: "numero",   cargaUtil: 8  },
+  nueve:       {tipo: "numero",   cargaUtil: 9  },
+  sumar:       {tipo: "operador", cargaUtil:"+" },
+  restar:      {tipo: "operador", cargaUtil:"-" },
+  multiplicar: {tipo: "operador", cargaUtil:"X" },
+  dividir:     {tipo: "operador", cargaUtil:"/" },
+  igual:       {tipo: "igual",    cargaUtil:"=" },
+};
+
+const estados = {
+// estado: ESPERANDO
+ ESPERANDO: {
+   numero: "OPERANDO1", // evento: numero, próximo estado operando1
+   cero:   "OPERANDO1"  // evento: cero,   próximo estado operando1
+ },
+ OPERANDO1: {
+   numero: "OPERANDO1"
+ }
+};
+
+function transicion(estado, evento) {
+  const estadoSiguiente = estados[estado][evento.tipo];
+
+  switch(estadoSiguiente) {
+    case "OPERANDO1":
+     console.log("| Estado: " + estadoSiguiente  + 
+                " | " + "Entrada válida: " + evento.cargaUtil + " |\n");
+
+     break;
+    default: 
+     console.log("| Estado: " +  estado + ", Error: entrada inválida: " + evento.cargaUtil + " |\n");
+  }
+}
+console.log("Si la entrada/evento es válida, aceptamos la entrada/evento y pasamos al siguiente estado: \n");
+transicion("ESPERANDO", evento.cero); 
+transicion("ESPERANDO", evento.uno); 
+transicion("ESPERANDO", evento.dos); 
+transicion("ESPERANDO", evento.tres); 
+transicion("ESPERANDO", evento.cuatro); 
+transicion("ESPERANDO", evento.cinco); 
+transicion("ESPERANDO", evento.seis); 
+transicion("ESPERANDO", evento.siete); 
+transicion("ESPERANDO", evento.ocho); 
+transicion("ESPERANDO", evento.nueve); 
+
+console.log("Si la entrada/evento es inválida, rechazamos la entrada/evento y nos quedamos en el estado:\n");
+
+transicion("ESPERANDO", evento.sumar); 
+transicion("ESPERANDO", evento.restar); 
+transicion("ESPERANDO", evento.multiplicar); 
+transicion("ESPERANDO", evento.dividir); 
+
+console.log("---------------\n");
+console.log("- Pruebas");
+console.log("1. -=");
+transicion("ESPERANDO", evento.restar); 
+transicion("ESPERANDO", evento.igual); 
+
+console.log("2. /1=");
+transicion("ESPERANDO", evento.dividir); 
+transicion("ESPERANDO", evento.uno); 
+transicion("OPERANDO1", evento.igual); 
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Si la entrada/evento es válida, aceptamos la entrada/evento y pasamos al siguiente estado: 
+
+| Estado: OPERANDO1 | Entrada válida: 0 |
+
+| Estado: OPERANDO1 | Entrada válida: 1 |
+
+| Estado: OPERANDO1 | Entrada válida: 2 |
+
+| Estado: OPERANDO1 | Entrada válida: 3 |
+
+| Estado: OPERANDO1 | Entrada válida: 4 |
+
+| Estado: OPERANDO1 | Entrada válida: 5 |
+
+| Estado: OPERANDO1 | Entrada válida: 6 |
+
+| Estado: OPERANDO1 | Entrada válida: 7 |
+
+| Estado: OPERANDO1 | Entrada válida: 8 |
+
+| Estado: OPERANDO1 | Entrada válida: 9 |
+
+Si la entrada/evento es inválida, rechazamos la entrada/evento y nos quedamos en el estado:
+
+| Estado: ESPERANDO, Error: entrada inválida: + |
+
+| Estado: ESPERANDO, Error: entrada inválida: - |
+
+| Estado: ESPERANDO, Error: entrada inválida: X |
+
+| Estado: ESPERANDO, Error: entrada inválida: / |
+
+---------------
+
+- Pruebas
+1. -=
+| Estado: ESPERANDO, Error: entrada inválida: - |
+
+| Estado: ESPERANDO, Error: entrada inválida: = |
+
+2. /1=
+| Estado: ESPERANDO, Error: entrada inválida: / |
+
+| Estado: OPERANDO1 | Entrada válida: 1 |
+
+| Estado: OPERANDO1, Error: entrada inválida: = |
+
+#+end_example
+
+** Redux Style Guide y Xstate 
+
+https://redux.js.org/style-guide#treat-reducers-as-state-machines
+
+#+begin_quote
+Treat Reducers as State Machines
+
+Many Redux reducers are written "unconditionally". They only look at the dispatched action and calculate a new state value, without basing any of the logic on what the current state might be. This can cause bugs, as some actions may not be "valid" conceptually at certain times depending on the rest of the app logic. For example, a "request succeeded" action should only have a new value calculated if the state says that it's already "loading", or an "update this item" action should only be dispatched if there is an item marked as "being edited".
+
+To fix this, treat reducers as "state machines", where the combination of both the current state and the dispatched action determines whether a new state value is actually calculated, not just the action itself unconditionally.
+
+Detailed Explanation
+A finite state machine is a useful way of modeling something that should only be in one of a finite number of "finite states" at any time. For example, if you have a fetchUserReducer, the finite states can be:
+
+"idle"    (fetching not started yet)
+"loading" (currently fetching the user)
+"success" (user fetched successfully)
+"failure" (user failed to fetch)
+To make these finite states clear and make impossible states impossible, you can specify a property that holds this finite state:
+
+#+end_quote
+
+
+#+begin_src js
+const initialUserState = {
+  status: 'idle', // explicit finite state
+  user: null,
+  error: null
+}
+#+end_src
+
+#+begin_quote
+With TypeScript, this also makes it easy to use discriminated unions to represent each finite state. For instance, if state.status === 'success', then you would expect state.user to be defined and wouldn't expect state.error to be truthy. You can enforce this with types.
+
+Typically, reducer logic is written by taking the action into account first. When modeling logic with state machines, it's important to take the state into account first. Creating "finite state reducers" for each state helps encapsulate behavior per state:
+#+end_quote
+
+#+begin_src js
+import {
+  FETCH_USER,
+  // ...
+} from './actions'
+
+const IDLE_STATUS = 'idle';
+const LOADING_STATUS = 'loading';
+const SUCCESS_STATUS = 'success';
+const FAILURE_STATUS = 'failure';
+
+const fetchIdleUserReducer = (state, action) => {
+  // state.status is "idle"
+  switch (action.type) {
+    case FETCH_USER:
+      return {
+        ...state,
+        status: LOADING_STATUS
+      }
+    }
+    default:
+      return state;
+  }
+}
+
+// ... other reducers
+
+const fetchUserReducer = (state, action) => {
+  switch (state.status) {
+    case IDLE_STATUS:
+      return fetchIdleUserReducer(state, action);
+    case LOADING_STATUS:
+      return fetchLoadingUserReducer(state, action);
+    case SUCCESS_STATUS:
+      return fetchSuccessUserReducer(state, action);
+    case FAILURE_STATUS:
+      return fetchFailureUserReducer(state, action);
+    default:
+      // this should never be reached
+      return state;
+  }
+}
+#+end_src
+
+#+begin_quote
+Now, since you're defining behavior per state instead of per action, you also prevent impossible transitions. For instance, a FETCH_USER action should have no effect when status === LOADING_STATUS, and you can enforce that, instead of accidentally introducing edge-cases.
+#+end_quote
+
+Biblioteca:
+
+https://xstate.js.org/
+
+
+
+
