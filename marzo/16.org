@@ -694,8 +694,8 @@ transicion("azul",     "asdfasdf"); // estado inválido, evento inválido
 
 ** Ejemplo calculadora usando un autómata 
 
-En este ejemplo la calculadora no permite que el primer símbolo ingresado sea un operador(es decir, solo acepta digitos: 0-9).
-Éste  autómata es un poco más sofisticado que el anterior, los eventos tienen un "tipo", lo que permite reducir la cantidad de pares estado-evento (en el caso de los digitos pasamos de tener 10 pares de estado-evento a 1 par).
+En este ejemplo la calculadora no permite que el primer símbolo ingresado sea un operador(es decir, solo acepta números: 0-9).
+Éste  autómata es un poco más sofisticado que el anterior, los eventos tienen un "tipo", lo que permite reducir la cantidad de pares estado-evento (en el caso de los números pasamos de tener 10 pares de estado-evento a 1 par).
 
 #+begin_src js :results output :exports both
 const evento = {
