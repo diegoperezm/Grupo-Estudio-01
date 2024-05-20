@@ -1,0 +1,235 @@
+#+title: picoctf - basic mod 1
+#+author: Diego Pérez 
+
+* Introducción
+
+URL: https://play.picoctf.org/practice/challenge/253?page=1&search=basic-mod1
+
+AUTHOR: WILL HONG
+
+Original:
+
+#+begin_quote
+Description
+We found this weird message being passed around on the servers, we think we have a working decryption scheme.
+Download the message here.
+Take each number mod 37 and map it to the following character set: 0-25 is the alphabet (uppercase), 26-35 are the decimal digits, and 36 is an underscore.
+Wrap your decrypted message in the picoCTF flag format (i.e. picoCTF{decrypted_message})
+#+end_quote
+
+Traducido:
+
+#+begin_quote
+Hemos encontrado este extraño mensaje siendo compartido en los servidores, creemos que es un esquema de descifrado funcional.
+Descarga el mensaje aquí.
+Toma cada número mod 37 y asignalo al siguiente grupo de caracteres: 
+ - 0  - 25 es el alfabeto (mayúsculas)
+ - 26 - 35 números decimales 
+ - 36 guión bajo
+
+flag format: picoCTF{decrypted_message}
+#+end_quote
+
+** Vocabulario:
+
+https://es.wikipedia.org/wiki/Operaci%C3%B3n_m%C3%B3dulo
+
+#+begin_quote
+En informática, la operación módulo obtiene el resto de la división de un número entre otro (a veces llamado residuo).
+#+end_quote
+
+
+# f-strings https://docs.python.org/3/tutorial/inputoutput.html
+
+
+
+** Arreglos & Indices 
+
+codificación rígida (hardcoded) https://es.wikipedia.org/wiki/Codificaci%C3%B3n_r%C3%ADgida
+
+Generar Programáticamente
+ - for 
+
+ - Python:  
+   - for 
+   - List Comprehension
+
+Codificación rígida (Hardcoded):
+
+#+begin_src python :results output
+alfabeto_codificacion_r = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+
+mensaje_cifrado = [350, 63, 353, 198, 114, 369, 346, 184, 202, 322, 94, 235, 114, 110, 185, 188, 225, 212, 366, 374, 261, 213]
+
+mensaje_descifrado = (
+                      alfabeto_codificacion_r[mensaje_cifrado[0]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[1]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[2]%37]  +
+                      alfabeto_codificacion_r[mensaje_cifrado[3]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[4]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[5]%37]  +
+                      alfabeto_codificacion_r[mensaje_cifrado[6]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[7]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[8]%37]  +  
+                      alfabeto_codificacion_r[mensaje_cifrado[9]%37]  + 
+                      alfabeto_codificacion_r[mensaje_cifrado[10]%37] + 
+                      alfabeto_codificacion_r[mensaje_cifrado[11]%37] + 
+                      alfabeto_codificacion_r[mensaje_cifrado[12]%37] + 
+                      alfabeto_codificacion_r[mensaje_cifrado[13]%37] +  
+                      alfabeto_codificacion_r[mensaje_cifrado[14]%37] +  
+                      alfabeto_codificacion_r[mensaje_cifrado[15]%37] +  
+                      alfabeto_codificacion_r[mensaje_cifrado[16]%37] +
+                      alfabeto_codificacion_r[mensaje_cifrado[17]%37] +  
+                      alfabeto_codificacion_r[mensaje_cifrado[18]%37] + 
+                      alfabeto_codificacion_r[mensaje_cifrado[19]%37] + 
+                      alfabeto_codificacion_r[mensaje_cifrado[20]%37] + 
+                      alfabeto_codificacion_r[mensaje_cifrado[21]%37] 
+                      )
+
+flag_format = f"picoCTF{{{mensaje_descifrado}}}"
+print(flag_format )
+
+#+end_src
+
+#+RESULTS:
+: picoCTF{R0UND_N_R0UND_ADD17EC2}
+
+List Comprehension:
+
+#+begin_src python :results output
+alfabeto_list_comprehension  = ''.join( [chr(i) for i  in range(65,91)] + [chr(i)  for i  in range(48,58)] + ["_"] )
+mensaje_cifrado = [350, 63, 353, 198, 114, 369, 346, 184, 202, 322, 94, 235, 114, 110, 185, 188, 225, 212, 366, 374, 261, 213]
+mensaje_descifrado = ''.join([alfabeto_list_comprehension[n%37] for n in  mensaje_cifrado ])
+
+flag_format = f"picoCTF{{{mensaje_descifrado}}}"
+
+print(flag_format)
+#+end_src
+
+#+RESULTS:
+: picoCTF{R0UND_N_R0UND_ADD17EC2}
+
+Biblioteca Estándar:
+
+#+begin_src python :results output
+import string 
+alfabeto_constante_stdlib =  string.ascii_uppercase + string.digits + "_"
+mensaje_cifrado = [350, 63, 353, 198, 114, 369, 346, 184, 202, 322, 94, 235, 114, 110, 185, 188, 225, 212, 366, 374, 261, 213]
+mensaje_descifrado = ''.join([alfabeto_constante_stdlib[n%37] for n in  mensaje_cifrado ])
+
+flag_format = f"picoCTF{{{mensaje_descifrado}}}"
+
+print(flag_format)
+#+end_src
+
+#+RESULTS:
+: picoCTF{R0UND_N_R0UND_ADD17EC2}
+
+#+begin_src python :results output
+alfabeto_for = ""
+
+for i in range(65,91):
+ alfabeto_for += chr(i) 
+
+for i in range(48,58):  
+ alfabeto_for += chr(i) 
+
+alfabeto_for += "_" 
+
+mensaje_cifrado = [350, 63, 353, 198, 114, 369, 346, 184, 202, 322, 94, 235, 114, 110, 185, 188, 225, 212, 366, 374, 261, 213]
+
+mensaje_descifrado = ''.join(map(lambda n: alfabeto_for[n%37], mensaje_cifrado ))
+
+flag_format = f"picoCTF{{{mensaje_descifrado}}}"
+
+print(flag_format)
+#+end_src
+
+#+RESULTS:
+: picoCTF{R0UND_N_R0UND_ADD17EC2}
+
+
+mensaje 
+
+#+begin_src 
+350 63 353 198 114 369 346 184 202 322 94 235 114 110 185 188 225 212 366 374 261 213 
+#+end_src
+
+
+
+* Código
+
+** JavaScript 
+
+#+begin_src js :results output
+const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+
+const mensajeCifrado = [
+    350,63,353,198,114,369,346,184,202,322,94,235,114,110,185,188,225,212,366,374,261,213
+];
+
+const mensajeDescifrado = [];
+
+for(let i=0; i < mensajeCifrado.length; i++ ) {
+    mensajeDescifrado[i] = alfabeto[(mensajeCifrado[i]%37)];
+}
+
+console.log(`picoCTF{${mensajeDescifrado.join("")}}`);
+#+end_src
+
+
+
+** Python 
+
+*PROGRAMACION LITERARIA*
+
+#+name: asdf  
+#+begin_src python :results  output
+asdfr = "asdffffff"
+print(asdfr)
+#+end_src
+
+#+RESULTS: asdf
+: asdffffff
+
+#+begin_src python :results output :noweb yes
+<<asdf>>
+#+end_src
+
+#+RESULTS:
+: asdffffff
+
+
+** C  
+
+#+begin_src C :results output 
+
+int main(void)  {
+ char alfabeto[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+ printf("%c", alfabeto[1]); 
+}
+
+#+end_src
+
+#+RESULTS:
+: B
+
+
+** Java ??
+
+#+begin_src java :results output
+class A {
+ public static void main(String[] args) {
+   System.out.println("sdfsdfa");
+ } 
+}
+#+end_src
+
+
+
+
+* gaemoe 
+
+#+begin_quote
+manuals that pre-dated the War, such as "Section III. School of the Company: To Rank, Size, and Form the Company," in Abstract of Infantry Tactics, by Major General Winfield Scott in 1826, or "Title First, Article First: Formation of a Regiment in order of battle, or in line," in Rifle and Light Infantry Tactics, by Major William Hardee in 1855, was to make sure that each man in the rear rank was slightly taller than the man immediately before him in the front rank. This enabled the rear-rank men to safely aim their weapons without interference from the front-rank men. That was why the aforementioned height-order procedure was carried out. 
+#+end_quote
