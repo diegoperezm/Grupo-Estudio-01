@@ -5,6 +5,7 @@
 
 * vimtutor es
 
+#+begin_quote
 ===============================================================================
 =     B i e n v e n i d o   a l   t u t o r   d e   V I M  -  Versión 1.7     =
 ===============================================================================
@@ -1031,7 +1032,7 @@ NOTA:  El completado funciona con muchos comandos. Solo pulse CTRL-D o
     Correo electrónico: victorhck@opensuse.org
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+#+end_quote
 
 
 
